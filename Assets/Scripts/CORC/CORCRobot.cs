@@ -4,8 +4,10 @@ using UnityEngine;
 
 namespace CORC
 {
-    //Dictionnary with predefined type, fixed non-modifiable structure and defined order
-    //(C# has no generic OrderedDictionnary nor nonmodifiable ones)
+    /// <summary>
+    /// Dictionnary with predefined type, fixed non-modifiable structure and defined order
+    /// (C# has no generic OrderedDictionnary nor nonmodifiable ones)
+    /// </summary>
     public class FixedDictionary : Dictionary<string, double[]>
     {
         private int TotalLength = 0;
@@ -28,12 +30,17 @@ namespace CORC
             Locked = true;
         }
 
+        /// <summary>
+        /// Return the total length (number of double values) registered within the dcitionnary
+        /// </summary>
         public int GetTotalLength()
         {
             return TotalLength;
         }
 
-        //Fill entire dictionnary double values in the order specified in ItemsOrder
+        /// <summary>
+        /// Fill the entire dictionnary double values in the order specified in ItemsOrder
+        /// </summary>
         public bool FillAll(double[] values)
         {
             if (values.Length != TotalLength)
@@ -56,14 +63,18 @@ namespace CORC
             }
         }
 
-        //Prevent change to the dictionnary structure
+        /// <summary>
+        /// Prevent change to the dictionnary structure: this has no effect
+        /// </summary>
         public new void Add(string key, double[] value)
         {
             //Not allowed
             throw new NotSupportedException();
         }
 
-        //Prevent change to the dictionnary structure
+        /// <summary>
+        /// Prevent change to the dictionnary structure: this has no effect
+        /// </summary>
         public new bool Remove(string key)
         {
             //Not allowed
@@ -71,20 +82,26 @@ namespace CORC
         }
     }
 
-
+    /// <summary>
+    /// Abstract class to define a CORC robot object and manage communication with CORC server
+    /// </summary>
     public abstract class CORCRobot: MonoBehaviour
     {
         public FLNLClient Client = new FLNLClient();
         public FixedDictionary State;
         protected bool Initialised = false;
 
-        // Start is called before the first frame update
+        /// <summary>
+        /// Initialisation
+        /// </summary>
         public void Start()
         {
             Initialised = false;
         }
 
-        // Update is called once per frame
+        /// <summary>
+        /// Retrieve Robot state values from CORC server
+        /// </summary>
         public void Update()
         {
             if (Initialised)
@@ -97,20 +114,31 @@ namespace CORC
             }
         }
 
+        /// <summary>
+        /// Is Robot initialised and communication established?
+        /// </summary>
         public bool IsInitialised()
         {
             return Initialised;
         }
 
-        //Connect to CORC and register states values to be updated every loop
+        /// <summary>
+        /// Connect to CORC and register states values to be updated every loop
+        /// </summary>
         public abstract void Init(string ip = "192.168.7.2", int port = 2048);
 
+        /// <summary>
+        /// Disconnect from CORC server
+        /// </summary>
         public void Disconnect()
         {
             Client.Disconnect();
+            Initialised = false;
         }
 
-        //Send a command (up to 4 characters) and associated parameters (up to 30)
+        /// <summary>
+        /// Send a command (up to 4 characters) and associated double parameters (up to 30) to CORC server
+        /// </summary>
         public void SendCmd(string cmd, double[] parameters = null)
         {
             Client.SendCmd(cmd.ToCharArray(), parameters);

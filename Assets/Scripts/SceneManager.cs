@@ -27,12 +27,14 @@ public class SceneManager : MonoBehaviour
         Status.text = "Status:\n";
         if (Robot.IsInitialised())
         {
+            //Update status text box
             Status.text += "\tConnected\n";
             Status.text += "\tt: " + Robot.State["t"][0].ToString("####.00") + "\n";
             Status.text += "\tX:" + Robot.State["X"][0].ToString("0.000") + "\t" + Robot.State["X"][1].ToString("0.000") + "\t" + Robot.State["X"][2].ToString("0.000") + "\n";
             Status.text += "\tdX:" + Robot.State["dX"][0].ToString("0.00") + "\t" + Robot.State["dX"][1].ToString("0.00") + "\t" + Robot.State["dX"][2].ToString("0.00") + "\n";
             Status.text += "\tF:" + Robot.State["F"][0].ToString("00.0") + "\t" + Robot.State["F"][1].ToString("00.0") + "\t" + Robot.State["F"][2].ToString("00.0") + "\n";
 
+            //Map cursor position and force interaction vector to current robot values
             float scale = 1000;
             Vector3 Origin = new Vector3(0, 0, -500);
             Cursor.transform.position = new Vector3((float)Robot.State["X"][1], (float)Robot.State["X"][2], -(float)Robot.State["X"][0])*scale+Origin;
@@ -40,7 +42,7 @@ public class SceneManager : MonoBehaviour
             float force_scale = 10;
             Arrow.transform.localPosition = new Vector3(0, 0, force.magnitude / force_scale);
             Arrow.transform.localScale = new Vector3(0.2f, force.magnitude / force_scale, 0.2f);
-            Cursor.transform.LookAt(Cursor.transform.position + force);
+            Cursor.transform.LookAt(Cursor.transform.position - force);
         }
         else
         {

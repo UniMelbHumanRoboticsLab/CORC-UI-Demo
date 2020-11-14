@@ -4,6 +4,10 @@ namespace CORC
 {
     public class CORCM3 : CORCRobot
     {
+        /// <summary>
+        /// Specific class to define a CORC X2 robot object and manage communication with CORC server
+        /// State dictionnary will contain X: end-effector position, dq: end-effector velocity, F: end-effector interaction force, t: running time of CORC server
+        /// </summary>
         public override void Init(string ip = "192.168.7.2", int port = 2048)
         {
             if (Client.IsConnected())

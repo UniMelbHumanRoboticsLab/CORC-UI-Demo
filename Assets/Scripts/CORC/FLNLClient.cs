@@ -12,8 +12,14 @@ namespace CORC
         public double[] parameters;
     };
 
+    /// <summary>
+    /// Low-level communication library for CORC allowing to exchange double values and commands (4 characters) with double values parameters.
+    /// RT paradigm implementation: discard everything but last received.
+    /// Based on libFLNL (https://github.com/vcrocher/libFLNL).
+    /// </summary>
     public class FLNLClient
     {
+        //These values should match the libFLNL server implementation
         private const int MESSAGE_SIZE = 255; //Messages (frame) size in bytes
         private const int EXPECTED_DOUBLE_SIZE = 8; //Size expected for the doubles: will be checked at startup and should be same on server and client size
         private const int CMD_SIZE = 4; //Commands length in chars
@@ -51,7 +57,10 @@ namespace CORC
             Disconnect();
         }
 
-        public void Connect(string ip, int port = 2048)
+        /// <summary>
+        /// Attempt to connect to the server indicated by ip and port and create a reception thread
+        /// </summary>
+        public bool Connect(string ip, int port = 2048)
         {
             IP = IPAddress.Parse(ip);
             Port = port;
@@ -62,29 +71,42 @@ namespace CORC
                 receptionThread.IsBackground = true;
                 receptionThread.Start();
                 Connected = true;
+                return true;
             }
             else
             {
+                client.Dispose();
                 Console.WriteLine("Connection error");
+                return false;
             }
         }
 
+        /// <summary>
+        /// Close connection and kill reception thread
+        /// </summary>
         public void Disconnect()
         {
             Connected = false;
             if (receptionThread != null)
                 receptionThread.Abort();
+            client.Dispose();
         }
 
         public bool IsConnected()
         {
-            if (!client.Connected)
+            if (Connected)
             {
-                Disconnect();
+                if (!client.Connected)
+                {
+                    Disconnect();
+                }
             }
             return Connected;
         }
 
+        /// <summary>
+        /// Send a CMD_SIZE characters command and double paramters
+        /// </summary>
         public void SendCmd(char[] cmd, double[] parameters = null)
         {
             if (cmd.Length > CMD_SIZE)
@@ -137,6 +159,9 @@ namespace CORC
             }
         }
 
+        /// <summary>
+        /// Send double values
+        /// </summary>
         public void SendValues(double[] vals)
         {
             if (vals.Length > MaxNbValues)
@@ -181,6 +206,9 @@ namespace CORC
             return IsCmd;
         }
 
+        /// <summary>
+        /// Return array of latest received values from the server
+        /// </summary>
         public double[] GetReceivedValues()
         {
             double[] values = new double[ReceivedValues.Length];
@@ -189,6 +217,9 @@ namespace CORC
             return values;
         }
 
+        /// <summary>
+        /// Return latest received cmd from the server
+        /// </summary>
         public FLNLCmd GetReceivedCmd()
         {
             FLNLCmd cmd;
@@ -199,7 +230,9 @@ namespace CORC
             return cmd;
         }
 
-
+        /// <summary>
+        /// Compute message checksum
+        /// </summary>
         private byte Checksum(Byte[] bytes)
         {
             byte ck = 0;
@@ -209,6 +242,9 @@ namespace CORC
             return ck;
         }
 
+        /// <summary>
+        /// Receiving function: infinite loop while connected
+        /// </summary>
         private void Receive()
         {
             try

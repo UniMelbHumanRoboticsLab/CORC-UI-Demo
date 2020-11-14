@@ -2,6 +2,10 @@
 
 namespace CORC
 {
+    /// <summary>
+    /// Specific class to define a CORC X2 robot object and manage communication with CORC server
+    /// State dictionnary will contain q: joint position, dq: joint velocities, tau: joint torques, t: running time of CORC server
+    /// </summary>
     public class CORCX2 : CORCRobot
     {
         public override void Init(string ip = "192.168.7.2", int port = 2048)
