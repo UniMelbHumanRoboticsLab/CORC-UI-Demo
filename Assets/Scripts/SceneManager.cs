@@ -8,8 +8,10 @@ public class SceneManager : MonoBehaviour
     public Button ConnectBtn, CmdButton;
     public Text Status;
     public InputField IP;
-    public GameObject Cursor;
+    public GameObject Cursor, Arrow;
     public CORCM3 Robot;
+
+    //static float x = 0;
 
     // Start is called before the first frame update
     void Start()
@@ -32,18 +34,29 @@ public class SceneManager : MonoBehaviour
             Status.text += "\tF:" + Robot.State["F"][0].ToString("00.00") + "\t" + Robot.State["F"][1].ToString("00.00") + "\t" + Robot.State["F"][2].ToString("00.00") + "\n";
 
             float scale = 1000;
-            Vector3 Origin = new Vector3(320, 200, 0);
+            Vector3 Origin = new Vector3(0, 0, 0);
             Cursor.transform.position = new Vector3((float)Robot.State["X"][0], -(float)Robot.State["X"][2], (float)Robot.State["X"][1])*scale+Origin;
+            Vector3 force = new Vector3((float)Robot.State["F"][0], -(float)Robot.State["F"][2], (float)Robot.State["F"][1]);
+            float force_scale = 40;
+            Arrow.transform.localPosition = new Vector3(0, 0, force.magnitude / force_scale);
+            Arrow.transform.localScale = new Vector3(0.2f, force.magnitude / force_scale, 0.2f);
+            Cursor.transform.LookAt(Cursor.transform.position + force);
         }
         else
         {
             Status.text += "\tNot Connected\n";
+
+            /*float scale = 1000;
+            Vector3 Origin = new Vector3(0f, 0f, 0f);
+            x += 0.000001f;
+            Cursor.transform.position += new Vector3(x, 0, 0) * scale + Origin;
+            Vector3 force = new Vector3(100/40, 100/40, 0);
+            Arrow.transform.localPosition = new Vector3(0, 0, force.magnitude);
+            Arrow.transform.localScale = new Vector3(0.2f, force.magnitude, 0.2f);
+            Cursor.transform.LookAt(Cursor.transform.position + force);*/
         }
     }
 
-    public void Connect()
-    {
-    }
 
     public void GTNSCommand()
     {
@@ -53,5 +66,9 @@ public class SceneManager : MonoBehaviour
 
     private void OnApplicationQuit() 
     {
+        if (Robot.IsInitialised())
+        {
+            Robot.Disconnect();
+        }
     }
 }
