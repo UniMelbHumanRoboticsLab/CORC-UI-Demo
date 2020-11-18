@@ -16,7 +16,7 @@ public class SceneManager : MonoBehaviour
     // Start is called before the first frame update
     void Start()
     {
-        ConnectBtn.onClick.AddListener(() => { Robot.Init(IP.text); });
+        ConnectBtn.onClick.AddListener(() => { Connect(); });
         CmdButton.onClick.AddListener(() => { GTNSCommand(); });
         IP.text = "192.168.7.2";
     }
@@ -24,19 +24,28 @@ public class SceneManager : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-        Status.text = "Status:\n";
+        Status.text = "Status:";
         if (Robot.IsInitialised())
         {
             //Update status text box
-            Status.text += "\tConnected\n";
+            Status.text += " Connected\n";
             Status.text += "\tt: " + Robot.State["t"][0].ToString("####.00") + "\n";
-            Status.text += "\tX:" + Robot.State["X"][0].ToString("0.000") + "\t" + Robot.State["X"][1].ToString("0.000") + "\t" + Robot.State["X"][2].ToString("0.000") + "\n";
-            Status.text += "\tdX:" + Robot.State["dX"][0].ToString("0.00") + "\t" + Robot.State["dX"][1].ToString("0.00") + "\t" + Robot.State["dX"][2].ToString("0.00") + "\n";
-            Status.text += "\tF:" + Robot.State["F"][0].ToString("00.0") + "\t" + Robot.State["F"][1].ToString("00.0") + "\t" + Robot.State["F"][2].ToString("00.0") + "\n";
+            Status.text += "\tX:";
+            foreach(double val in Robot.State["X"])
+                Status.text += val.ToString("0.000") + "\t";
+            Status.text += "\n";
+            Status.text += "\tdX:";
+            foreach (double val in Robot.State["dX"])
+                Status.text += val.ToString("0.00") + "\t";
+            Status.text += "\n";
+            Status.text += "\tF:";
+            foreach (double val in Robot.State["F"])
+                Status.text += val.ToString("00.0") + "\t";
+            Status.text += "\n";
 
             //Map cursor position and force interaction vector to current robot values
             float scale = 1000;
-            Vector3 Origin = new Vector3(0, 0, -500);
+            Vector3 Origin = new Vector3(0, 80, -500);
             Cursor.transform.position = new Vector3((float)Robot.State["X"][1], (float)Robot.State["X"][2], -(float)Robot.State["X"][0])*scale+Origin;
             Vector3 force = new Vector3((float)Robot.State["F"][1], (float)Robot.State["F"][2], -(float)Robot.State["F"][0]);
             float force_scale = 10;
@@ -46,16 +55,7 @@ public class SceneManager : MonoBehaviour
         }
         else
         {
-            Status.text += "\tNot Connected\n";
-
-            /*float scale = 1000;
-            Vector3 Origin = new Vector3(0f, 0f, 0f);
-            x += 0.000001f;
-            Cursor.transform.position += new Vector3(x, 0, 0) * scale + Origin;
-            Vector3 force = new Vector3(100/40, 100/40, 0);
-            Arrow.transform.localPosition = new Vector3(0, 0, force.magnitude);
-            Arrow.transform.localScale = new Vector3(0.2f, force.magnitude, 0.2f);
-            Cursor.transform.LookAt(Cursor.transform.position + force);*/
+            Status.text += " Not Connected\n";
         }
     }
 
@@ -63,6 +63,21 @@ public class SceneManager : MonoBehaviour
     public void GTNSCommand()
     {
         Robot.SendCmd("GTNS");
+    }
+
+    public void Connect()
+    {
+        if (!Robot.IsInitialised())
+        {
+            Robot.Init(IP.text);
+            if(Robot.IsInitialised())
+                ConnectBtn.GetComponentInChildren<Text>().text = "Disconnect";
+        }
+        else
+        {
+            Robot.Disconnect();
+            ConnectBtn.GetComponentInChildren<Text>().text = "Connect";
+        }
     }
     
 

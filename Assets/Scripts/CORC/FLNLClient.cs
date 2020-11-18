@@ -55,6 +55,7 @@ namespace CORC
         ~FLNLClient()
         {
             Disconnect();
+            client.Dispose();
         }
 
         /// <summary>
@@ -64,7 +65,16 @@ namespace CORC
         {
             IP = IPAddress.Parse(ip);
             Port = port;
-            client.Connect(ip, Port);
+            try
+            {
+                client.Connect(ip, Port);
+            }
+            catch (SocketException)
+            {
+                Console.WriteLine("Connection error");
+                return false;
+            }
+            
             if (client.Connected)
             {
                 receptionThread = new Thread(new ThreadStart(Receive));
@@ -75,7 +85,6 @@ namespace CORC
             }
             else
             {
-                client.Dispose();
                 Console.WriteLine("Connection error");
                 return false;
             }
@@ -89,7 +98,6 @@ namespace CORC
             Connected = false;
             if (receptionThread != null)
                 receptionThread.Abort();
-            client.Dispose();
         }
 
         public bool IsConnected()
@@ -105,7 +113,7 @@ namespace CORC
         }
 
         /// <summary>
-        /// Send a CMD_SIZE characters command and double paramters
+        /// Send a CMD_SIZE characters command and double parameters
         /// </summary>
         public void SendCmd(char[] cmd, double[] parameters = null)
         {
@@ -121,41 +129,44 @@ namespace CORC
                 return;
             }
 
-            try
+            if (Connected)
             {
-                NetworkStream stream = client.GetStream();
-                Byte[] bytes = new Byte[MESSAGE_SIZE];
+                try
+                {
+                    NetworkStream stream = client.GetStream();
+                    Byte[] bytes = new Byte[MESSAGE_SIZE];
 
-                bytes[0] = (Byte)('C');
-                bytes[1] = (Byte)parameters.Length;
-                //Copy cmd
-                for (int i = 0; i < cmd.Length; i++)
-                {
-                    bytes[2 + i] = (Byte)cmd[i];
+                    bytes[0] = (Byte)('C');
+                    bytes[1] = (Byte)parameters.Length;
+                    //Copy cmd
+                    for (int i = 0; i < cmd.Length; i++)
+                    {
+                        bytes[2 + i] = (Byte)cmd[i];
+                    }
+                    //pad if less than CMD_SIZE
+                    for (int i = cmd.Length; i < CMD_SIZE; i++)
+                    {
+                        bytes[2 + cmd.Length] = 0;
+                    }
+                    //Add parameters
+                    for (int i = 0; i < parameters.Length; i++)
+                    {
+                        Byte[] val = new byte[sizeof(double)];
+                        val = BitConverter.GetBytes(parameters[i]);
+                        val.CopyTo(bytes, 2 + CMD_SIZE + i * sizeof(double));
+                    }
+                    //Pad with 0s
+                    for (int i = 2 + CMD_SIZE + parameters.Length * sizeof(double); i < MESSAGE_SIZE - 1; i++)
+                    {
+                        bytes[i] = 0;
+                    }
+                    bytes[bytes.Length - 1] = Checksum(bytes);
+                    stream.Write(bytes, 0, bytes.Length);
                 }
-                //pad if less than CMD_SIZE
-                for (int i = cmd.Length; i < CMD_SIZE; i++)
+                catch (SocketException socketException)
                 {
-                    bytes[2 + cmd.Length] = 0;
+                    Console.WriteLine("Server disconnected (SocketException " + socketException.ToString() + ")");
                 }
-                //Add parameters
-                for (int i = 0; i < parameters.Length; i++)
-                {
-                    Byte[] val = new byte[sizeof(double)];
-                    val = BitConverter.GetBytes(parameters[i]);
-                    val.CopyTo(bytes, 2 + CMD_SIZE + i * sizeof(double));
-                }
-                //Pad with 0s
-                for (int i = 2 + CMD_SIZE + parameters.Length * sizeof(double); i < MESSAGE_SIZE - 1; i++)
-                {
-                    bytes[i] = 0;
-                }
-                bytes[bytes.Length - 1] = Checksum(bytes);
-                stream.Write(bytes, 0, bytes.Length);
-            }
-            catch (SocketException socketException)
-            {
-                Console.WriteLine("Server disconnected (SocketException " + socketException.ToString() + ")");
             }
         }
 
@@ -170,37 +181,46 @@ namespace CORC
                 return;
             }
 
-            try
+            if (Connected)
             {
-                NetworkStream stream = client.GetStream();
-                Byte[] bytes = new Byte[MESSAGE_SIZE];
-                bytes[0] = (Byte)('V');
-                bytes[1] = (Byte)vals.Length;
-                for (int i = 0; i < vals.Length; i++)
+                try
                 {
-                    Byte[] val = new byte[sizeof(double)];
-                    val = BitConverter.GetBytes(vals[i]);
-                    val.CopyTo(bytes, 2 + i * sizeof(double));
+                    NetworkStream stream = client.GetStream();
+                    Byte[] bytes = new Byte[MESSAGE_SIZE];
+                    bytes[0] = (Byte)('V');
+                    bytes[1] = (Byte)vals.Length;
+                    for (int i = 0; i < vals.Length; i++)
+                    {
+                        Byte[] val = new byte[sizeof(double)];
+                        val = BitConverter.GetBytes(vals[i]);
+                        val.CopyTo(bytes, 2 + i * sizeof(double));
+                    }
+                    //Pad with 0s
+                    for (int i = 2 + vals.Length * sizeof(double); i < MESSAGE_SIZE - 1; i++)
+                    {
+                        bytes[i] = 0;
+                    }
+                    bytes[bytes.Length - 1] = Checksum(bytes);
+                    stream.Write(bytes, 0, bytes.Length);
                 }
-                //Pad with 0s
-                for (int i = 2 + vals.Length * sizeof(double); i < MESSAGE_SIZE - 1; i++)
+                catch (SocketException socketException)
                 {
-                    bytes[i] = 0;
+                    Console.WriteLine("Server disconnected (SocketException " + socketException.ToString() + ")");
                 }
-                bytes[bytes.Length - 1] = Checksum(bytes);
-                stream.Write(bytes, 0, bytes.Length);
-            }
-            catch (SocketException socketException)
-            {
-                Console.WriteLine("Server disconnected (SocketException " + socketException.ToString() + ")");
             }
         }
 
+        /// <summary>
+        /// return true if new values have been received since last call to GetReceivedValues()
+        /// </summary>
         public bool IsReceivedValues()
         {
             return IsValues;
         }
 
+        /// <summary>
+        /// return true if a new command has been received since last call to GetReceivedCmd()
+        /// </summary>
         public bool IsReceivedCmd()
         {
             return IsCmd;

@@ -12,18 +12,24 @@ namespace CORC
         {
             if (Client.IsConnected())
                 Client.Disconnect();
-            Client.Connect(ip, port);
 
-            //Define state values to receive (in pre-defined order: should match CORC implementation)
-            State = new FixedDictionary
+            if (Client.Connect(ip, port))
             {
-                ["q"] = new double[4],
-                ["dq"] = new double[4],
-                ["tau"] = new double[4],
-                ["t"] = new double[1],
-            };
-            State.Init(new string[] { "q", "dq", "tau", "t" });
-            Initialised = true;
+                //Define state values to receive (in pre-defined order: should match CORC implementation)
+                State = new FixedDictionary
+                {
+                    ["q"] = new double[4],
+                    ["dq"] = new double[4],
+                    ["tau"] = new double[4],
+                    ["t"] = new double[1],
+                };
+                State.Init(new string[] { "q", "dq", "tau", "t" });
+                Initialised = true;
+            }
+            else
+            {
+                Initialised = false;
+            }
         }
     }
 }
