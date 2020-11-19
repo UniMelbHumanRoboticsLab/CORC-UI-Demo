@@ -33,15 +33,15 @@ public class SceneManager : MonoBehaviour
             last_t= Robot.State["t"][0];
             Status.text += "\tX:";
             foreach(double val in Robot.State["X"])
-                Status.text += val.ToString("0.000") + "\t";
+                Status.text += val.ToString("0.000") + " \t";
             Status.text += "\n";
             Status.text += "\tdX:";
             foreach (double val in Robot.State["dX"])
-                Status.text += val.ToString("0.00") + "\t";
+                Status.text += val.ToString("0.00") + " \t";
             Status.text += "\n";
             Status.text += "\tF:";
             foreach (double val in Robot.State["F"])
-                Status.text += val.ToString("00.0") + "\t";
+                Status.text += val.ToString("00.0") + " \t";
             Status.text += "\n";
 
             //Map cursor position and force interaction vector to current robot values
