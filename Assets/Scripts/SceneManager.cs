@@ -11,7 +11,7 @@ public class SceneManager : MonoBehaviour
     public GameObject Cursor, Arrow;
     public CORCM3 Robot;
 
-    //static float x = 0;
+    double last_t = 0;
 
     // Start is called before the first frame update
     void Start()
@@ -29,7 +29,8 @@ public class SceneManager : MonoBehaviour
         {
             //Update status text box
             Status.text += " Connected\n";
-            Status.text += "\tt: " + Robot.State["t"][0].ToString("####.00") + "\n";
+            Status.text += "\tt: " + Robot.State["t"][0].ToString("####.00") + " (" + (Robot.State["t"][0]-last_t).ToString("0.000") + ")\n";
+            last_t= Robot.State["t"][0];
             Status.text += "\tX:";
             foreach(double val in Robot.State["X"])
                 Status.text += val.ToString("0.000") + "\t";
