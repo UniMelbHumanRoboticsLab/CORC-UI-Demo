@@ -18,12 +18,12 @@ namespace CORC
                 //Define state values to receive (in pre-defined order: should match CORC implementation)
                 State = new FixedDictionary
                 {
+                    ["t"] = new double[1],
                     ["X"] = new double[3],
                     ["dX"] = new double[3],
-                    ["F"] = new double[3],
-                    ["t"] = new double[1]
+                    ["F"] = new double[3]
                 };
-                State.Init(new string[] { "X", "dX", "F", "t" });
+                State.Init(new string[] { "t", "X", "dX", "F" });
                 Initialised = true;
             }
             else
