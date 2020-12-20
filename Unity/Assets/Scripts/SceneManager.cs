@@ -1,4 +1,6 @@
-﻿using UnityEngine;
+﻿#define M2 //Comment for M3
+
+using UnityEngine;
 using UnityEngine.UI;
 using CORC;
 
@@ -9,13 +11,20 @@ public class SceneManager : MonoBehaviour
     public Text Status;
     public InputField IP;
     public GameObject Cursor, Arrow;
-    public CORCM3 Robot;
+    public CORCRobot Robot;
+    public CORCM3 M3Robot;
+    public CORCM2 M2Robot;
 
     double last_t = 0;
 
     // Start is called before the first frame update
     void Start()
     {
+        #if (M2)
+            Robot = M2Robot;
+        #else
+            Robot = M3Robot;
+        #endif
         ConnectBtn.onClick.AddListener(() => { Connect(); });
         CmdButton.onClick.AddListener(() => { GTNSCommand(); });
         IP.text = "192.168.7.2";
@@ -47,8 +56,13 @@ public class SceneManager : MonoBehaviour
             //Map cursor position and force interaction vector to current robot values
             float scale = 1000;
             Vector3 Origin = new Vector3(0, 80, -500);
-            Cursor.transform.position = new Vector3((float)Robot.State["X"][1], (float)Robot.State["X"][2], -(float)Robot.State["X"][0])*scale+Origin;
-            Vector3 force = new Vector3((float)Robot.State["F"][1], (float)Robot.State["F"][2], -(float)Robot.State["F"][0]);
+            #if (M2)
+                Cursor.transform.position = new Vector3((float)Robot.State["X"][0], (float)Robot.State["X"][1], 0)*scale+Origin;
+                Vector3 force = new Vector3((float)Robot.State["F"][0], (float)Robot.State["F"][1], 0);
+            #else
+                Cursor.transform.position = new Vector3((float)Robot.State["X"][1], (float)Robot.State["X"][2], -(float)Robot.State["X"][0])*scale+Origin;
+                Vector3 force = new Vector3((float)Robot.State["F"][1], (float)Robot.State["F"][2], -(float)Robot.State["F"][0]);
+            #endif
             float force_scale = 10;
             Arrow.transform.localPosition = new Vector3(0, 0, force.magnitude / force_scale);
             Arrow.transform.localScale = new Vector3(0.2f, force.magnitude / force_scale, 0.2f);
