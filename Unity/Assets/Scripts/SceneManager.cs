@@ -19,6 +19,7 @@ public class SceneManager : MonoBehaviour
         ConnectBtn.onClick.AddListener(() => { Connect(); });
         CmdButton.onClick.AddListener(() => { GTNSCommand(); });
         IP.text = "192.168.7.2";
+        Robot.SetLoggingFile("mylog.csv");
     }
 
     // Update is called once per frame

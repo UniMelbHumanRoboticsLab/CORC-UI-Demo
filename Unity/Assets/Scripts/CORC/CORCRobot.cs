@@ -1,4 +1,5 @@
 ﻿using System;
+using System.IO;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -90,6 +91,7 @@ namespace CORC
         public FLNLClient Client = new FLNLClient();
         public FixedDictionary State;
         protected bool Initialised = false;
+        private string LoggingFilename = "";
 
         /// <summary>
         /// Initialisation
@@ -97,6 +99,20 @@ namespace CORC
         public void Start()
         {
             Initialised = false;
+        }
+
+        public bool SetLoggingFile(string filename)
+        {
+            LoggingFilename = filename;
+            //Create file and write header
+            using (Client.LogFileStream = new StreamWriter(LoggingFilename))
+            {
+                foreach (string key in State.ItemsOrder)
+                {
+                    Client.LogFileStream.Write(key + ",");
+                }
+                return true;
+            }
         }
 
         /// <summary>

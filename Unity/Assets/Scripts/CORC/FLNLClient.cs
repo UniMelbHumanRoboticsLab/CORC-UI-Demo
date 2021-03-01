@@ -1,5 +1,5 @@
 ﻿using System;
-using System.Collections.Generic;
+using System.IO;
 using System.Net;
 using System.Net.Sockets;
 using System.Threading;
@@ -39,6 +39,8 @@ namespace CORC
         private bool IsCmd = false;
         private bool IsValues = false;
         private bool Connected = false;
+        private bool Logging = false;
+        public StreamWriter LogFileStream;
 
 
         public FLNLClient()
@@ -111,6 +113,13 @@ namespace CORC
             }
             return Connected;
         }
+
+        public bool SetLogging(bool val)
+        {
+            Logging = val;
+            return Logging;
+        }
+
 
         /// <summary>
         /// Send a CMD_SIZE characters command and double parameters
@@ -289,6 +298,18 @@ namespace CORC
                                         ReceivedValues[i] = BitConverter.ToDouble(bytes, 2 + i * sizeof(double));
 
                                     IsValues = true;
+
+                                    //Log to file as received
+                                    if (Logging)
+                                    {
+                                        //Write to file
+                                        using (LogFileStream)
+                                        {
+                                            for (int i = 0; i < nbValuesToReceive; i++)
+                                                LogFileStream.Write(ReceivedValues[i] + ",");
+                                        }
+                                    }
+
                                 }
                                 //Cmd
                                 else if (bytes[0] == InitCmdCode)
